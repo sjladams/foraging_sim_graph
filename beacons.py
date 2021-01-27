@@ -77,8 +77,8 @@ class Beacons:
             self.beacons[beac_tag].variance()
 
     def update_beacon_configuration(self, position_changed=True, weights_changed=True, just_initialized = False ):
-        if position_changed:
-            self.update_masks()
+        # if position_changed:
+        #     self.update_masks()
         # if weights_changed:
         #     self.update_neighbours_weights()
         # TODO check why just_initialized condition is needed

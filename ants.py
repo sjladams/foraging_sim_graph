@@ -17,7 +17,7 @@ class Ant:
         self.epsilon = epsilon
         self.trips = 0
         self.move = np.array([[0., 0.], [0.,0.]])
-        self.w = np.array([np.NaN, np.NaN])
+        # self.w = np.array([np.NaN, np.NaN])
         self.ant_tag = ant_tag
 
         self.neigh = []
@@ -46,7 +46,9 @@ class Ant:
         # derv = drv_gaussian(self.nt[1][0], self.nt[1][1], beacons.beacons, w_type) + \
         #        np.array([x_drv_elips_gaussian(self.nt[1][0], self.nt[1][1]),
         #                 y_drv_elips_gaussian(self.nt[1][0], self.nt[1][1])])
-        self.find_neigh_beacons(beacons)
+
+        # self.find_neigh_beacons(beacons)
+
         weights = {beac_tag:beacons.beacons[beac_tag].w[w_type] for beac_tag in self.neigh}
         max_beac_tag = max(weights, key=weights.get, default = 'nothing_in_range')
         guided_move = np.zeros(2)
@@ -61,8 +63,9 @@ class Ant:
 
         if np.linalg.norm(derv) < step_threshold or self.epsilon > random.uniform(0,1):
             derv = np.array([random.uniform(-1,1),random.uniform(-1,1)])
-        elif np.linalg.norm(guided_move) >= step_threshold:
-            print('non random step')
+
+        # elif np.linalg.norm(guided_move) >= step_threshold:
+        #     print('non random step')
 
 
         if move_type == 'add':
@@ -97,28 +100,27 @@ class Ant:
     def find_closest_beacon(self, beacons):
         # self.cl_beac = beacons.tree.query(self.nt[1])[1]
         # \TODO don't use the tree, just use the distance to a beacon, with bound
-        try:
-            self.cl_beac = list(beacons.beacons.keys())[beacons.tree.query(self.nt[1])[1]]
-        except:
-            test = 0
-        # cl_node = grid.find_closest_grid_point(self.nt[1])['elem']
-        # self.cl_beac = beacons.map_closest_beacon[cl_node[1]][cl_node[0]]
+        # try:
+        #     self.cl_beac = list(beacons.beacons.keys())[beacons.tree.query(self.nt[1])[1]]
+        # except:
+        #     test = 0
 
-    def update_weights(self, beacons):
-        self.w[0] = gaussian(self.nt[1][0], self.nt[1][1], beacons.beacons, 0)
-        self.w[1] = gaussian(self.nt[1][0], self.nt[1][1], beacons.beacons, 1)
+        neigh_dist = {beac_tag: np.linalg.norm(beacons.beacons[beac_tag].pt[1] - self.nt[1]) for beac_tag
+                      in self.neigh}
+        self.cl_beac = min(neigh_dist, key=neigh_dist.get, default=None)
+
+    # def update_weights(self, beacons):
+    #     self.w[0] = gaussian(self.nt[1][0], self.nt[1][1], beacons.beacons, 0)
+    #     self.w[1] = gaussian(self.nt[1][0], self.nt[1][1], beacons.beacons, 1)
 
     def find_neigh_beacons(self, beacons):
         neigh = []
-        # weights = [[],[]]
         for beac_tag in beacons.beacons:
             # \TODO robust solution numeric tolarance range
             if np.linalg.norm(beacons.beacons[beac_tag].pt[1] - self.nt[1]) < clip_range + 0.1*clip_range:
-                # neigh_weights['W1'][beac_tag] = beacons.beacons[beac_tag].w[0]
-                # neigh_weights['W2'][beac_tag] = beacons.beacons[beac_tag].w[1]
+                # neigh_weigh[beac_tag][0] = beacons.beacons[beac_tag].w[0]
+                # neigh_weigh[beac_tag][1] = beacons.beacons[beac_tag].w[1]
                 neigh += [beac_tag]
-                # weights[0] += [beacons.beacons[beac_tag].w[0]]
-                # weights[1] += [beacons.beacons[beac_tag].w[1]]
         self.neigh = neigh
 
 class Ants:
@@ -140,18 +142,18 @@ class Ants:
         for ant_tag in self.ants:
             self.ants[ant_tag].find_closest_beacon(beacons)
 
-    def update_weights(self, beacons):
-        for ant_tag in self.ants:
-            self.ants[ant_tag].update_weights(beacons)
+    # def update_weights(self, beacons):
+    #     for ant_tag in self.ants:
+    #         self.ants[ant_tag].update_weights(beacons)
 
     def release_ants(self, n, beac_tags):
         next_tag = max(list(self.ants.keys()) + beac_tags,default=-1)+1
         for ant_tag in range(next_tag,next_tag+n):
             self.ants[ant_tag] = Ant(self.nest_location, self.food_location, ant_tag, epsilon=self.epsilon)
 
-    # def find_neigh_beacon_weights(self, beacons):
-    #     for ant_tag in self.ants:
-    #         self.ants[ant_tag].find_neigh_beacons(beacons)
+    def find_neigh_beacon_weights(self, beacons):
+        for ant_tag in self.ants:
+            self.ants[ant_tag].find_neigh_beacons(beacons)
 
     # def ants_mapper(fnc):
     #     def inner(self, beacons):

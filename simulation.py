@@ -35,93 +35,109 @@ class Simulations:
         self.ants = Ants(nest_location, food_location, epsilon=default_epsilon)
         self.ants.release_ants(1,list(self.beacons.beacons.keys()))
         self.ants.steps(self.beacons)
+
+        self.update_ant_beacon_connection()
         self.switch_step()
+        self.update_ant_beacon_connection()
 
         # self.update_beacon_weights()
         # self.beacons.update_neighbours_beacons()
 
-        self.grid.update_graph_weights(self.beacons)
+        # self.grid.update_graph_weights(self.beacons)
         # self.beacons.update_m_c_beacons(self.grid.W)
 
-    def sim_step(self, time_step):
+    def sim_step(self, time_step, switch_time=250):
         N_till_now = (time_step+1)*self.N_batch
-        # if time_step < 75:
+
+        # ACTION
         if N_till_now < self.N_total:
             self.ants.release_ants(self.N_batch, list(self.beacons.beacons.keys()))
         self.ants.steps(self.beacons)
 
-        self.beacons.evaporate_weights(rho=self.rho)
+        # UPDATE
+        self.update_ant_beacon_connection()
 
-        self.update_beacon_weights()
-        self.beacons.update_beacon_configuration(position_changed=False)
-
-        self.grid.update_graph_weights(self.beacons)
-
-    def sim_step_mov_beac(self,time_step,switch_time=250):
-        self.sim_step(time_step)
-
+        # ACTION
         if time_step >= switch_time:
-            # self.beacons.move_step(self.grid.W)
             self.switch_step()
-            self.grid.update_graph_weights(self.beacons)
 
+        # UPDATE
+        ## Done within switch_step
+
+        # ACTION
+        self.beacons.evaporate_weights(rho=self.rho)
+        self.update_beacon_weights()
+
+        # UPDATE
+        self.update_ant_beacon_connection()
+        # self.beacons.update_beacon_configuration(position_changed=False)
+
+        # self.grid.update_graph_weights(self.beacons)
+
+        # STORE
         self.store_nr_trips(time_step)
 
+    # def sim_step_mov_beac(self,time_step,switch_time=250):
+    #     self.sim_step(time_step)
+    #
+    #     if time_step >= switch_time:
+    #         # self.beacons.move_step(self.grid.W)
+    #         self.switch_step()
+    #         # self.grid.update_graph_weights(self.beacons)
+    #
+    #     self.store_nr_trips(time_step)
+
     def update_ant_beacon_connection(self):
-        self.ants.find_closest_beacon(self.beacons)
-        self.beacons.fnc_ants_at_beacons(self.ants.ants)
+        self.ants.find_neigh_beacon_weights(self.beacons)           # Depends on location of beacons and ants
+        self.ants.find_closest_beacon(self.beacons)                 # Depends on location of beacons and ants, and neigh_beacons
+        self.beacons.fnc_ants_at_beacons(self.ants.ants)            # Depends on cl_beaon
 
     def switch_step(self):
-        self.ants.update_weights(self.beacons)
+        # self.ants.update_weights(self.beacons)
 
         old_ants = self.ants.ants.copy()
         tags_changed = []
         for ant_tag in old_ants:
-            if sum(self.ants.ants[ant_tag].w) <= 0. and np.random.uniform() <1 :
-
+            # if sum(self.ants.ants[ant_tag].w) <= 0.:
+            if self.ants.ants[ant_tag].cl_beac == None:
                 tags_changed += [ant_tag]
 
                 self.beacons.beacons[ant_tag] = Beacon(self.ants.ants[ant_tag].nt[1], ant_tag)
-                self.beacons.update_beacon_configuration(just_initialized=True)
-                self.initialize_beacon_weights(ant_tag)
-                self.beacons.update_beacon_configuration(position_changed=False)
+
+                self.initialize_beacon_weights(ant_tag) # only one agents initializes, so no need to update nr of ants per beacon
+                # self.beacons.update_beacon_configuration(position_changed=False)
+                # \TODO Instead update only specific tag:
+                self.beacons.beacons[ant_tag].amplitude()
+                self.beacons.beacons[ant_tag].variance()
 
                 del self.ants.ants[ant_tag]
                 self.update_ant_beacon_connection()
 
-                # check beacons one by one:
-                self.ants.update_weights(self.beacons)
+                # # check beacons one by one:
+                # self.ants.update_weights(self.beacons)
 
         weight_dict = self.beacons.check_weights(to_check = 'W',thres=threshold)
         ant_dict = self.beacons.check_ants()
 
-        # to comment:
-        old_beacons = self.beacons.beacons.copy()
-        for beac_tag in old_beacons:
-            if beac_tag not in weight_dict and beac_tag not in ant_dict and beac_tag not in tags_changed:
-                self.ants.ants[beac_tag] = Ant(default_nest_location, default_food_location, beac_tag,
-                                               init_location=self.beacons.beacons[beac_tag].pt[1])
-                del self.beacons.beacons[beac_tag]
-
-                self.beacons.update_beacon_configuration()
-                self.update_ant_beacon_connection()
+        # old_beacons = self.beacons.beacons.copy()
+        # for beac_tag in old_beacons:
+        #     if beac_tag not in weight_dict and beac_tag not in ant_dict and beac_tag not in tags_changed:
+        #         self.ants.ants[beac_tag] = Ant(default_nest_location, default_food_location, beac_tag,
+        #                                        init_location=self.beacons.beacons[beac_tag].pt[1])
+        #         del self.beacons.beacons[beac_tag]
+        #
+        #         self.update_ant_beacon_connection()
 
 
     def reward(self, weights,rew,ants_at_beacon):
-        # return ampFactor * self.rho * (1+lam*max(weights) + rew)/self.N
-        # return ampFactor * (lam * max(weights) + rew) / ants_at_beacon
-        # return ampFactor * (lam * max(weights)) / (self.N *ants_at_beacon) +rew
-        # return ampFactor * (lam * max(weights) + rew) / (self.N * ants_at_beacon)
-        # return ampFactor * self.rho * (0.5 + lam * max(weights) + rew) / (self.N * ants_at_beacon)
-        # return ampFactor * self.rho * ( lam * max(weights, default=0) + rew) / (ants_at_beacon)
         return self.rho * (lam * max(weights, default=0) + rew) / (ants_at_beacon)
-        # return 1
 
     def initialize_beacon_weights(self,tag):
-        # neigh_beac_weigh = self.ants.ants[tag].find_neigh_beacon_weights(self.beacons)
         self.ants.ants[tag].find_neigh_beacons(self.beacons)
         W1_weights = [self.beacons.beacons[beac_tag].w[0] for beac_tag in self.ants.ants[tag].neigh]
+        # W1_weights = self.ants.ants[tag].neigh_weigh[0].values()
         W2_weights = [self.beacons.beacons[beac_tag].w[1] for beac_tag in self.ants.ants[tag].neigh]
+        # W2_weights = self.ants.ants[tag].neigh_weigh[1].values()
 
         if self.ants.ants[tag]._reached_nest():
             self.beacons.beacons[tag].w[0] += self.reward(W1_weights, rew, 1)
@@ -134,14 +150,18 @@ class Simulations:
             self.beacons.beacons[tag].w[1] += self.reward(W2_weights, 0, 1)
 
     def update_beacon_weights(self):
-        self.ants.find_closest_beacon(self.beacons)
-        self.beacons.fnc_ants_at_beacons(self.ants.ants)
+        # self.ants.find_neigh_beacon_weights(self.beacons)
+        # self.ants.find_closest_beacon(self.beacons)
+        # self.beacons.fnc_ants_at_beacons(self.ants.ants)
 
         for ant_tag in self.ants.ants:
-            # neigh_beac_weigh = self.ants.ants[ant_tag].find_neigh_beacon_weights(self.beacons)
-            self.ants.ants[ant_tag].find_neigh_beacons(self.beacons)
-            W1_weights = [self.beacons.beacons[tag].w[0] for tag in self.ants.ants[ant_tag].neigh]
-            W2_weights = [self.beacons.beacons[tag].w[1] for tag in self.ants.ants[ant_tag].neigh]
+            if self.ants.ants[ant_tag].cl_beac == None:
+                test =1
+            # self.ants.ants[ant_tag].find_neigh_beacons(self.beacons)
+            W1_weights = [self.beacons.beacons[beac_tag].w[0] for beac_tag in self.ants.ants[ant_tag].neigh]
+            # W1_weights = self.ants.ants[ant_tag].neigh_weigh[0].values()
+            W2_weights = [self.beacons.beacons[beac_tag].w[1] for beac_tag in self.ants.ants[ant_tag].neigh]
+            # W2_weights = self.ants.ants[ant_tag].neigh_weigh[1].values()
 
             if self.ants.ants[ant_tag].mode[0]==0:
                 if self.ants.ants[ant_tag]._reached_nest():
@@ -163,24 +183,6 @@ class Simulations:
                 else:
                     self.beacons.beacons[self.ants.ants[ant_tag].cl_beac].w[1] += self.reward(W2_weights,
                                                         0, self.beacons.beacons[self.ants.ants[ant_tag].cl_beac].ants_at_beacon)
-
-        # for beac_tag in self.beacons.beacons:
-        #     neigh_beac_weigh = self.beacons.beacons[beac_tag].neigh_weigh
-        #
-        #     if self.beacons.beacons[beac_tag].nest_in_range():
-        #         self.beacons.beacons[beac_tag].w[0] += self.reward(neigh_beac_weigh[0], rew,
-        #                                                            self.beacons.beacons[beac_tag].ants_at_beacon)
-        #     else:
-        #         self.beacons.beacons[beac_tag].w[0] += self.reward(neigh_beac_weigh[0], 0,
-        #                                                            self.beacons.beacons[beac_tag].ants_at_beacon)
-        #
-        #     if self.beacons.beacons[beac_tag].food_in_range():
-        #         self.beacons.beacons[beac_tag].w[1] += self.reward(neigh_beac_weigh[1], rew,
-        #                                                            self.beacons.beacons[beac_tag].ants_at_beacon)
-        #     else:
-        #         self.beacons.beacons[beac_tag].w[1] += self.reward(neigh_beac_weigh[1], 0,
-        #                                                            self.beacons.beacons[beac_tag].ants_at_beacon)
-
 
     def plt(self, to_plot='W'):
         # vor = Voronoi([item.pt[1] for item in self.beacons.beacons])

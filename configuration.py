@@ -1,6 +1,6 @@
 local = True
 
-total_time = 600
+total_time = 400
 
 default_grid_size = [100,52]      # [200,100] / [100,50]
 default_domain = [20,10]           # [40,20] / [20,10]

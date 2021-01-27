@@ -10,7 +10,7 @@ for t in range(0,int(total_time/dt)):
     # print('time is:' + str(t))
     # print({count:item.cl_beac for count,item in enumerate(simulation.ants.ants)})
     # print(simulation.beacons.check_weights(to_show = 'W1'))
-    simulation.sim_step_mov_beac(t, switch_time=0)
+    simulation.sim_step(t, switch_time=0)
     # simulation.plt_beacons(to_plot='W1')
     if t % 2 ==0:  #5
         simulation.plt_beacons(to_plot='W1',fig_tag=t)
