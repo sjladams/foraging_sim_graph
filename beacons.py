@@ -62,26 +62,11 @@ class Beacons:
         self.grid = grid
         self.beacon_grid = beacon_grid
 
-        # self.beacons = [Beacon(location, count) for count, location in enumerate(self._uniform_deployment())]
-        # self.beacons = {count: Beacon(location, count) for count, location in enumerate(self._uniform_deployment())}
-        # self.beacons = {beac_tag: Beacon(location, beac_tag) for beac_tag, location in self._uniform_deployment()}
         self.beacons = dict()
 
         self.masks = []
         self.map_closest_beacon = []
         self.n = len(self.beacons)
-
-    # def _uniform_deployment(self):
-    #     # return np.array(
-    #     #     list(itertools.product(np.linspace(0, self.grid.domain[0], self.beacon_grid[0] + 2)[1:-1],
-    #     #                            np.linspace(0, self.grid.domain[1], self.beacon_grid[1] + 2)[1:-1])))
-    #     # return np.array([default_nest_location])
-    #     return zip([0,1], [default_nest_location, default_food_location])
-    #     # return np.array(
-    #     #     list(itertools.product(np.linspace(default_nest_location[0]-2, default_nest_location[0]+2,
-    #     #                                        self.beacon_grid[0] + 2)[1:-1],
-    #     #                            np.linspace(default_nest_location[1]-2, default_nest_location[1]+2,
-    #     #                                        self.beacon_grid[1] + 2)[1:-1]))
 
     def update_amplitude(self):
         for beac_tag in self.beacons:
@@ -106,26 +91,16 @@ class Beacons:
         self.update_locations()
         self.update_beacon_configuration()
 
-    # def remove_step(self):
-    #     self.remove_beacons()
-    #     self.update_masks()
-    #     self.update_neighbours_beacons()
 
-    # def switch_ant_beac_step(self,ants):
-    #     ants.update_weights(self)
-    #     # for ant in ants.ants:
-    #     #     if sum(ant.w) < 0.01:
-    #     #         self.beacons['aap'] = Beacon(ant.nt[1], 200)
-    #     #         ants.ants.remove(ant)
-    #     test = 1
+    def non_influenced_points(self):
+        influenced_points_dict = dict()
+        for beac_tag in self.beacons:
+            influenced_points_dict[beac_tag] = [point for point in self.grid.points if
+                               (np.linalg.norm(np.array(point) - self.beacons[beac_tag].pt[1]) <= clip_range)]
+        influenced_points = list(set([item for l in influenced_points_dict.values() for item in l]))
+        non_influenced_points = [point for point in self.grid.points if point not in influenced_points]
 
-    # def remove_beacons(self):
-    #     weight_dict = self.check_weights(to_show = 'W',thres=threshold)
-    #     ant_dict = self.check_ants()
-    #     old_beacons = self.beacons.copy()
-    #     for beac_tag in old_beacons:
-    #         if beac_tag not in weight_dict and beac_tag not in ant_dict:
-    #             del self.beacons[beac_tag]
+        return np.array(non_influenced_points)
 
     def update_masks(self):
         self.tree = KDTree([self.beacons[beac_tag].pt[1] for beac_tag in self.beacons])
@@ -149,21 +124,9 @@ class Beacons:
 
     def initialize_weights(self):
         for beac_tag in self.beacons:
-            # replace n (nr beacons) by nr of foragers
-            # beacon.w = np.array([ampFactor * 1 / self.n, ampFactor * 1 / self.n])
-            # beacon.w = np.array([0., 0.])
             self.beacons[beac_tag].w = np.array([0., 0.])
-            # self.beacons[beac_tag].w = np.array([offset, offset])
 
     def update_m_c_beacons(self, W):
-        # for count, beacon in enumerate(self.beacons):
-        #     beacon.mt[0] = beacon.mt[1]
-        #     beacon.ct[0][0] = beacon.ct[0][1]
-        #     beacon.ct[1][0] = beacon.ct[1][1]
-        #     beacon.mt[1] = simps(simps(W * self.masks[count], self.grid.x), self.grid.y)
-        #     beacon.ct[0][1] = simps(simps(W * self.grid.X * self.masks[count], self.grid.x), self.grid.y) / beacon.mt[1]
-        #     beacon.ct[1][1] = simps(simps(W * self.grid.Y * self.masks[count], self.grid.x), self.grid.y) / beacon.mt[1]
-
         for beac_tag in self.beacons:
             self.beacons[beac_tag].mt[0] = self.beacons[beac_tag].mt[1]
             self.beacons[beac_tag].ct[0][0] = self.beacons[beac_tag].ct[0][1]
@@ -175,17 +138,6 @@ class Beacons:
                                                     self.grid.y) / self.beacons[beac_tag].mt[1]
 
     def update_locations(self):
-        # for beacon in self.beacons:
-        #     delta_ct = [(beacon.ct[0][1] - beacon.ct[0][0]), (beacon.ct[1][1] - beacon.ct[1][0])]
-        #     delta_x = (delta_ct[0] / dt) - kappa * (beacon.pt[1][0] - beacon.ct[0][1]) + delta_ct[0] * \
-        #               self.neigh_control_term(beacon)[0]
-        #     delta_y = (delta_ct[1] / dt) - kappa * (beacon.pt[1][1] - beacon.ct[1][1]) + delta_ct[1] * \
-        #               self.neigh_control_term(beacon)[1]
-        #
-        #     beacon.pt[0] = beacon.pt[1]
-        #     beacon.pt[1] = [beacon.pt[0][0] + bound(delta_x * dt),
-        #                     beacon.pt[0][1] + bound(delta_y * dt)]
-
         for beac_tag in self.beacons:
             if beac_tag not in [0,1]:
                 delta_ct = [(self.beacons[beac_tag].ct[0][1] - self.beacons[beac_tag].ct[0][0]),
@@ -211,8 +163,6 @@ class Beacons:
         return move_i
 
     def fnc_ants_at_beacons(self, ants):
-        # for tag, beacon in enumerate(self.beacons):
-        #     beacon.fnc_ants_at_beacon(ants,tag)
         for beac_tag in self.beacons:
             self.beacons[beac_tag].fnc_ants_at_beacon(ants)
 

@@ -3,7 +3,9 @@ from simulation import *
 
 simulation = Simulations()
 
+simulation.plt_3d(to_plot='W')
 simulation.plt_beacons(to_plot='W')
+
 for t in range(0,int(total_time/dt)):
     # print('time is:' + str(t))
     # print({count:item.cl_beac for count,item in enumerate(simulation.ants.ants)})

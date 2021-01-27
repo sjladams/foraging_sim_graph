@@ -109,7 +109,8 @@ class Ant:
         neigh = []
         # weights = [[],[]]
         for beac_tag in beacons.beacons:
-            if np.linalg.norm(beacons.beacons[beac_tag].pt[1] - self.nt[1]) < clip_range:
+            # \TODO robust solution numeric tolarance range
+            if np.linalg.norm(beacons.beacons[beac_tag].pt[1] - self.nt[1]) < clip_range + 0.1*clip_range:
                 # neigh_weights['W1'][beac_tag] = beacons.beacons[beac_tag].w[0]
                 # neigh_weights['W2'][beac_tag] = beacons.beacons[beac_tag].w[1]
                 neigh += [beac_tag]

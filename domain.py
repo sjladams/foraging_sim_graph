@@ -10,6 +10,9 @@ class Grid:
         self.y = np.linspace(0,domain[1],grid_size[1]+1)
 
         self.X, self.Y = np.meshgrid(self.x,self.y)
+
+        self.points = [tuple([cx, cy]) for cx in self.x for cy in self.y]
+
         self.W1 = np.zeros(self.X.shape)
         self.W2 = np.zeros(self.X.shape)
 
