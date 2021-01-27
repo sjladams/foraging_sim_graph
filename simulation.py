@@ -121,7 +121,7 @@ class Simulations:
         # neigh_beac_weigh = self.ants.ants[tag].find_neigh_beacon_weights(self.beacons)
         self.ants.ants[tag].find_neigh_beacons(self.beacons)
         W1_weights = [self.beacons.beacons[beac_tag].w[0] for beac_tag in self.ants.ants[tag].neigh]
-        W2_weights = [self.beacons.beacons[beac_tag].w[0] for beac_tag in self.ants.ants[tag].neigh]
+        W2_weights = [self.beacons.beacons[beac_tag].w[1] for beac_tag in self.ants.ants[tag].neigh]
 
         if self.ants.ants[tag]._reached_nest():
             self.beacons.beacons[tag].w[0] += self.reward(W1_weights, rew, 1)
@@ -141,7 +141,7 @@ class Simulations:
             # neigh_beac_weigh = self.ants.ants[ant_tag].find_neigh_beacon_weights(self.beacons)
             self.ants.ants[ant_tag].find_neigh_beacons(self.beacons)
             W1_weights = [self.beacons.beacons[tag].w[0] for tag in self.ants.ants[ant_tag].neigh]
-            W2_weights = [self.beacons.beacons[tag].w[0] for tag in self.ants.ants[ant_tag].neigh]
+            W2_weights = [self.beacons.beacons[tag].w[1] for tag in self.ants.ants[ant_tag].neigh]
 
             if self.ants.ants[ant_tag].mode[0]==0:
                 if self.ants.ants[ant_tag]._reached_nest():

@@ -47,11 +47,11 @@ class Ant:
         #        np.array([x_drv_elips_gaussian(self.nt[1][0], self.nt[1][1]),
         #                 y_drv_elips_gaussian(self.nt[1][0], self.nt[1][1])])
         self.find_neigh_beacons(beacons)
-        weights = {beac_tag:beacons.beacons[beac_tag].w[0] for beac_tag in self.neigh}
+        weights = {beac_tag:beacons.beacons[beac_tag].w[w_type] for beac_tag in self.neigh}
         max_beac_tag = max(weights, key=weights.get, default = 'nothing_in_range')
         guided_move = np.zeros(2)
         if max_beac_tag != 'nothing_in_range':
-            if beacons.beacons[max_beac_tag].w[1] > 0.:
+            if beacons.beacons[max_beac_tag].w[w_type] > 0.:
                 location_max_beacon = beacons.beacons[max_beac_tag].pt[1]
                 # guided_move = self.normalize(location_max_beacon - self.nt[1])
                 guided_move = location_max_beacon - self.nt[1]
