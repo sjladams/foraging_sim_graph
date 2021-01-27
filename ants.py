@@ -61,6 +61,8 @@ class Ant:
 
         if np.linalg.norm(derv) < step_threshold or self.epsilon > random.uniform(0,1):
             derv = np.array([random.uniform(-1,1),random.uniform(-1,1)])
+        else:
+            print('non random step')
 
         if move_type == 'add':
            self.move[1] = self.normalize(self.normalize(derv)*dt + self.move[1])*dt
