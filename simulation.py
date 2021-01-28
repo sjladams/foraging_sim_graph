@@ -21,6 +21,8 @@ class Simulations:
     def __init__(self,grid_size=default_grid_size, beacon_grid=default_beacon_grid,
                  nest_location=default_nest_location, food_location=default_food_location, N_total=default_N_total,
                  N_batch = default_N_batch, rho=default_rho,domain=default_domain):
+        self.nest_location = default_nest_location
+        self.food_location = default_food_location
         self.N_total = N_total
         self.N_batch = N_batch
         self.rho = rho
@@ -122,7 +124,7 @@ class Simulations:
         old_beacons = self.beacons.beacons.copy()
         for beac_tag in old_beacons:
             if beac_tag not in weight_dict and beac_tag not in ant_dict and beac_tag not in tags_changed:
-                self.ants.ants[beac_tag] = Ant(default_nest_location, default_food_location, beac_tag,
+                self.ants.ants[beac_tag] = Ant(self.nest_location, self.food_location, beac_tag,
                                                init_location=self.beacons.beacons[beac_tag].pt[1])
                 del self.beacons.beacons[beac_tag]
 
@@ -202,8 +204,8 @@ class Simulations:
                  [item.nt[1][1] for item in self.ants.ants if item.mode[1] == 0], 'g*')
         plt.plot([item.nt[1][0] for item in self.ants.ants if item.mode[1] == 1],
                  [item.nt[1][1] for item in self.ants.ants if item.mode[1] == 1], 'y*')
-        plt.plot([default_nest_location[0], default_food_location[0]],
-                 [default_nest_location[1], default_food_location[1]], 'r*')
+        plt.plot([self.nest_location[0], self.food_location[0]],
+                 [self.nest_location[1], self.food_location[1]], 'r*')
         # plt.plot(list(itertools.chain.from_iterable(self.grid.X)),
         #          list(itertools.chain.from_iterable(self.grid.Y)), 'b*')
 
@@ -301,8 +303,8 @@ class Simulations:
                 plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
 
 
-        plt.plot([default_nest_location[0], default_food_location[0]],
-                 [default_nest_location[1], default_food_location[1]], 'r*')
+        plt.plot([self.nest_location[0], self.food_location[0]],
+                 [self.nest_location[1], self.food_location[1]], 'r*')
 
         plt.plot([self.ants.ants[ant_tag].nt[1][0] for ant_tag in self.ants.ants if
                   self.ants.ants[ant_tag].mode[1] == 0],
@@ -364,8 +366,8 @@ class Simulations:
                 circle = plt.Circle(self.ants.ants[ant_tag].nt[1], clip_range , color='g',fill=False)
                 ax.add_patch(circle)
 
-        plt.plot([default_nest_location[0], default_food_location[0]],
-                 [default_nest_location[1], default_food_location[1]], 'r*')
+        plt.plot([self.nest_location[0], self.food_location[0]],
+                 [self.nest_location[1], self.food_location[1]], 'r*')
 
         plt.plot([self.ants.ants[ant_tag].nt[1][0] for ant_tag in self.ants.ants if
                   self.ants.ants[ant_tag].mode[1] == 0],
