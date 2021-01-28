@@ -119,14 +119,14 @@ class Simulations:
         weight_dict = self.beacons.check_weights(to_check = 'W',thres=threshold)
         ant_dict = self.beacons.check_ants()
 
-        # old_beacons = self.beacons.beacons.copy()
-        # for beac_tag in old_beacons:
-        #     if beac_tag not in weight_dict and beac_tag not in ant_dict and beac_tag not in tags_changed:
-        #         self.ants.ants[beac_tag] = Ant(default_nest_location, default_food_location, beac_tag,
-        #                                        init_location=self.beacons.beacons[beac_tag].pt[1])
-        #         del self.beacons.beacons[beac_tag]
-        #
-        #         self.update_ant_beacon_connection()
+        old_beacons = self.beacons.beacons.copy()
+        for beac_tag in old_beacons:
+            if beac_tag not in weight_dict and beac_tag not in ant_dict and beac_tag not in tags_changed:
+                self.ants.ants[beac_tag] = Ant(default_nest_location, default_food_location, beac_tag,
+                                               init_location=self.beacons.beacons[beac_tag].pt[1])
+                del self.beacons.beacons[beac_tag]
+
+                self.update_ant_beacon_connection()
 
 
     def reward(self, weights,rew,ants_at_beacon):
@@ -157,6 +157,7 @@ class Simulations:
         for ant_tag in self.ants.ants:
             if self.ants.ants[ant_tag].cl_beac == None:
                 test =1
+                continue
             # self.ants.ants[ant_tag].find_neigh_beacons(self.beacons)
             W1_weights = [self.beacons.beacons[beac_tag].w[0] for beac_tag in self.ants.ants[ant_tag].neigh]
             # W1_weights = self.ants.ants[ant_tag].neigh_weigh[0].values()
@@ -251,6 +252,7 @@ class Simulations:
             plt.close()
         else:
             plt.show()
+            plt.close()
 
     def plt_beacons(self, to_plot='W', fig_tag=None):
         # vor = Voronoi([item.pt[1] for item in self.beacons.beacons])
@@ -325,6 +327,7 @@ class Simulations:
             plt.close()
         else:
             plt.show()
+            plt.close()
 
 
     def store_nr_trips(self,t):
