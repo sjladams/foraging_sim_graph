@@ -258,45 +258,45 @@ class Simulations:
             vor = Voronoi([self.beacons.beacons[beac_tag].pt[1] for beac_tag in self.beacons.beacons])
             voronoi_plot_2d(vor, show_vertices=False)
 
-        locations_non_influenced_points = self.beacons.non_influenced_points()
-        value_non_influenced_points = np.zeros(locations_non_influenced_points.shape[0])
-
-        locations_beacons = np.array([self.beacons.beacons[beac_tag].pt[1] for beac_tag in self.beacons.beacons])
+        # locations_non_influenced_points = self.beacons.non_influenced_points()
+        # value_non_influenced_points = np.zeros(locations_non_influenced_points.shape[0])
+        #
+        # locations_beacons = np.array([self.beacons.beacons[beac_tag].pt[1] for beac_tag in self.beacons.beacons])
+        #
+        # if to_plot == 'W1':
+        #     w_beacons = np.array([self.beacons.beacons[beac_tag].w[0] for beac_tag in self.beacons.beacons])
+        # elif to_plot == 'W2':
+        #     w_beacons = np.array([self.beacons.beacons[beac_tag].w[1] for beac_tag in self.beacons.beacons])
+        # else:
+        #     w_beacons = np.array([self.beacons.beacons[beac_tag].w[0] + self.beacons.beacons[beac_tag].w[1]
+        #                  for beac_tag in self.beacons.beacons])
+        #
+        # W_beacons = griddata(np.concatenate((locations_beacons,locations_non_influenced_points)),
+        #                      np.concatenate((w_beacons,value_non_influenced_points)) + 0.00000000001,  (self.grid.X, self.grid.Y), method='linear')
+        #
+        # if not np.max(W_beacons):
+        #     max_range = 0.001
+        # else:
+        #     max_range = np.max(W_beacons)
+        # plt.contourf(self.grid.X, self.grid.Y, W_beacons,levels=np.linspace(0,
+        #                 max_range,100))
+        # # plt.contourf(self.grid.X, self.grid.Y, W_beacons)
 
         if to_plot == 'W1':
-            w_beacons = np.array([self.beacons.beacons[beac_tag].w[0] for beac_tag in self.beacons.beacons])
+            for beac_tag in self.beacons.check_weights(to_check='W1'):
+                item = self.beacons.beacons[beac_tag]
+                size = (item.w[0] / max(self.beacons.check_weights(to_check='W1').values())) * 10
+                plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
         elif to_plot == 'W2':
-            w_beacons = np.array([self.beacons.beacons[beac_tag].w[1] for beac_tag in self.beacons.beacons])
-        else:
-            w_beacons = np.array([self.beacons.beacons[beac_tag].w[0] + self.beacons.beacons[beac_tag].w[1]
-                         for beac_tag in self.beacons.beacons])
-
-        W_beacons = griddata(np.concatenate((locations_beacons,locations_non_influenced_points)),
-                             np.concatenate((w_beacons,value_non_influenced_points)) + 0.00000000001,  (self.grid.X, self.grid.Y), method='linear')
-
-        if not np.max(W_beacons):
-            max_range = 0.001
-        else:
-            max_range = np.max(W_beacons)
-        plt.contourf(self.grid.X, self.grid.Y, W_beacons,levels=np.linspace(0,
-                        max_range,100))
-        # plt.contourf(self.grid.X, self.grid.Y, W_beacons)
-
-        # if to_plot == 'W1':
-        #     for beac_tag in self.beacons.check_weights(to_check='W1'):
-        #         item = self.beacons.beacons[beac_tag]
-        #         size = (item.w[0] / max(self.beacons.check_weights(to_check='W1').values())) * 10
-        #         plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
-        # elif to_plot == 'W2':
-        #     for beac_tag in self.beacons.check_weights(to_check='W2'):
-        #         item = self.beacons.beacons[beac_tag]
-        #         size = (item.w[1] / max(self.beacons.check_weights(to_check='W2').values())) * 10
-        #         plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
-        # elif to_plot == 'W':
-        #     for beac_tag in self.beacons.check_weights(to_check='W'):
-        #         item = self.beacons.beacons[beac_tag]
-        #         size = (item.w[1] / max(self.beacons.check_weights(to_check='W').values())) * 10
-        #         plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
+            for beac_tag in self.beacons.check_weights(to_check='W2'):
+                item = self.beacons.beacons[beac_tag]
+                size = (item.w[1] / max(self.beacons.check_weights(to_check='W2').values())) * 10
+                plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
+        elif to_plot == 'W':
+            for beac_tag in self.beacons.check_weights(to_check='W'):
+                item = self.beacons.beacons[beac_tag]
+                size = ((item.w[1] +item.w[0] ) / max(self.beacons.check_weights(to_check='W').values())) * 10
+                plt.plot([item.pt[1][0]], [item.pt[1][1]], 'o', color='black', markersize=size)
 
 
         plt.plot([default_nest_location[0], default_food_location[0]],
@@ -313,7 +313,7 @@ class Simulations:
 
         plt.xlim(0, self.grid.domain[0])
         plt.ylim(0, self.grid.domain[1])
-        plt.colorbar()
+        # plt.colorbar()
         if to_plot == 'W1' and fig_tag:
             plt.savefig(FOLDER_LOCATION + 'W1/' + str(to_plot) + '_' + str(fig_tag) + '.png')
             plt.close()
