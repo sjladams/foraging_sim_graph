@@ -108,9 +108,6 @@ class Simulations:
 
                 self.initialize_beacon_weights(ant_tag) # only one agents initializes, so no need to update nr of ants per beacon
                 # self.beacons.update_beacon_configuration(position_changed=False)
-                # \TODO Instead update only specific tag:
-                self.beacons.beacons[ant_tag].amplitude()
-                self.beacons.beacons[ant_tag].variance()
 
                 del self.ants.ants[ant_tag]
                 self.update_ant_beacon_connection()
@@ -333,12 +330,18 @@ class Simulations:
 
 
     def store_nr_trips(self,t):
-        self.total_trips[t] = sum([self.ants.ants[ant_tag].trips for ant_tag in self.ants.ants])
+        # self.total_trips[t] = sum([self.ants.ants[ant_tag].trips for ant_tag in self.ants.ants])
+        if t >0:
+            self.total_trips[t] = max(sum([self.ants.ants[ant_tag].trips for ant_tag in self.ants.ants]), self.total_trips[t-1])
+        else:
+            self.total_trips[t] = sum([self.ants.ants[ant_tag].trips for ant_tag in self.ants.ants])
 
     def plot_trips(self,total_time,fig_tag=None):
-        trips_sequence = [self.total_trips[time] for time in range(0,total_time)]
+        trips_sequence = np.array([self.total_trips[time] for time in range(0,total_time)]) / self.N_total
 
         plt.plot(range(0,total_time), trips_sequence, 'r')
+        plt.xlabel("Time")
+        plt.ylabel("#Trips / #Agents")
 
         if fig_tag:
             plt.savefig(FOLDER_LOCATION + 'total_trips_' + str(fig_tag) + '.png')
