@@ -36,7 +36,7 @@ class Simulations:
 
         self.ants = Ants(nest_location, food_location, epsilon=default_epsilon)
         self.ants.release_ants(1,list(self.beacons.beacons.keys()))
-        self.ants.steps(self.beacons)
+        self.ants.steps(self.beacons, self.grid)
 
         self.update_ant_beacon_connection()
         self.switch_step()
@@ -54,7 +54,7 @@ class Simulations:
         # ACTION
         if N_till_now < self.N_total:
             self.ants.release_ants(self.N_batch, list(self.beacons.beacons.keys()))
-        self.ants.steps(self.beacons)
+        self.ants.steps(self.beacons, self.grid)
 
         # UPDATE
         self.update_ant_beacon_connection()
@@ -90,7 +90,8 @@ class Simulations:
     #     self.store_nr_trips(time_step)
 
     def update_ant_beacon_connection(self):
-        self.ants.find_neigh_beacon_weights(self.beacons)           # Depends on location of beacons and ants
+        self.ants.find_neigh_beacons(self.beacons)           # Depends on location of beacons and ants
+        self.ants.find_neigh_ants()  # Depends on location of beacons and ants
         self.ants.find_closest_beacon(self.beacons)                 # Depends on location of beacons and ants, and neigh_beacons
         self.beacons.fnc_ants_at_beacons(self.ants.ants)            # Depends on cl_beaon
 
@@ -259,30 +260,6 @@ class Simulations:
             vor = Voronoi([self.beacons.beacons[beac_tag].pt[1] for beac_tag in self.beacons.beacons])
             voronoi_plot_2d(vor, show_vertices=False)
 
-        # locations_non_influenced_points = self.beacons.non_influenced_points()
-        # value_non_influenced_points = np.zeros(locations_non_influenced_points.shape[0])
-        #
-        # locations_beacons = np.array([self.beacons.beacons[beac_tag].pt[1] for beac_tag in self.beacons.beacons])
-        #
-        # if to_plot == 'W1':
-        #     w_beacons = np.array([self.beacons.beacons[beac_tag].w[0] for beac_tag in self.beacons.beacons])
-        # elif to_plot == 'W2':
-        #     w_beacons = np.array([self.beacons.beacons[beac_tag].w[1] for beac_tag in self.beacons.beacons])
-        # else:
-        #     w_beacons = np.array([self.beacons.beacons[beac_tag].w[0] + self.beacons.beacons[beac_tag].w[1]
-        #                  for beac_tag in self.beacons.beacons])
-        #
-        # W_beacons = griddata(np.concatenate((locations_beacons,locations_non_influenced_points)),
-        #                      np.concatenate((w_beacons,value_non_influenced_points)) + 0.00000000001,  (self.grid.X, self.grid.Y), method='linear')
-        #
-        # if not np.max(W_beacons):
-        #     max_range = 0.001
-        # else:
-        #     max_range = np.max(W_beacons)
-        # plt.contourf(self.grid.X, self.grid.Y, W_beacons,levels=np.linspace(0,
-        #                 max_range,100))
-        # # plt.contourf(self.grid.X, self.grid.Y, W_beacons)
-
         if to_plot == 'W1':
             for beac_tag in self.beacons.check_weights(to_check='W1'):
                 item = self.beacons.beacons[beac_tag]
@@ -312,8 +289,10 @@ class Simulations:
                  [self.ants.ants[ant_tag].nt[1][1] for ant_tag in self.ants.ants if
                   self.ants.ants[ant_tag].mode[1] == 1], 'y*')
 
-        plt.xlim(0, self.grid.domain[0])
-        plt.ylim(0, self.grid.domain[1])
+        # plt.xlim(0, self.grid.domain[0])
+        plt.xlim(-2, self.grid.domain[0]+2)
+        # plt.ylim(0, self.grid.domain[1])
+        plt.ylim(-2, self.grid.domain[1]+2)
         # plt.colorbar()
         if to_plot == 'W1' and fig_tag:
             plt.savefig(FOLDER_LOCATION + 'W1/' + str(to_plot) + '_' + str(fig_tag) + '.png')
@@ -339,7 +318,7 @@ class Simulations:
     def plot_trips(self,total_time,fig_tag=None):
         trips_sequence = np.array([self.total_trips[time] for time in range(0,total_time)]) / self.N_total
 
-        plt.plot(range(0,total_time), trips_sequence, 'r')
+        plt.plot(np.array(range(0,total_time))*dt, trips_sequence, 'r')
         plt.xlabel("Time")
         plt.ylabel("#Trips / #Agents")
 

@@ -13,10 +13,10 @@ for t in range(0,int(total_time/dt)):
     simulation.sim_step(t, switch_time=0)
     # simulation.plt_beacons(to_plot='W1')
 
-    if t == int(total_time/2):
-        simulation.food_location = [13.,2.]
+    # if t == int(total_time/2):
+    #     simulation.food_location = [13.,2.]
 
-    if t % 5 ==0:  #5
+    if t % 2 ==0:  #5
         simulation.plt_beacons(to_plot='W1',fig_tag=t)
         simulation.plt_beacons(to_plot='W2',fig_tag=t)
         simulation.plt_beacons(to_plot='W', fig_tag=t)

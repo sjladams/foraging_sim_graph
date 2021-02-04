@@ -13,32 +13,69 @@ class Grid:
 
         self.points = [tuple([cx, cy]) for cx in self.x for cy in self.y]
 
-        self.W1 = np.zeros(self.X.shape)
-        self.W2 = np.zeros(self.X.shape)
+        self.ref_lines = [np.array([[0,0],[0,domain[1]]]),
+                         np.array([[0,domain[1]],[domain[0],domain[1]]]),
+                         np.array([[domain[0],domain[1]],[domain[0],0]]),
+                         np.array([[domain[0],0],[0,0]])]
 
-        # self.grid_points_elem = [[x_elem, y_elem] for x_elem in range(0, len(self.x)) for y_elem in range(0, len(self.y))]
-        # self.grid_points_cor = [[self.x[x_elem], self.y[y_elem]] for x_elem in range(0, len(self.x))
-        #                         for y_elem in range(0, len(self.y))]
-        # self.grid_points = {count: {'elem': [x_elem, y_elem], 'cor': [self.x[x_elem], self.y[y_elem]]} for
-        #                count, [x_elem, y_elem] in enumerate(self.grid_points_elem)}
-        # self.tree = KDTree(self.grid_points_cor)
+        # self.W1 = np.zeros(self.X.shape)
+        # self.W2 = np.zeros(self.X.shape)
 
-    def update_graph_weights(self,beacons):
-        # self.W1 = gaussian(self.X, self.Y, beacons.beacons,0) + \
-        #           elips_gaussian(self.X, self.Y)
-        # self.W2 = gaussian(self.X, self.Y, beacons.beacons,1) + \
-        #             elips_gaussian(self.X, self.Y)
-        # self.W = gaussian(self.X, self.Y, beacons.beacons,0) + \
-        #          gaussian(self.X, self.Y, beacons.beacons,1) + \
-        #          elips_gaussian(self.X, self.Y)
+    # def update_graph_weights(self,beacons):
+    #     self.W1 = gaussian(self.X, self.Y, beacons.beacons,0)
+    #     self.W2 = gaussian(self.X, self.Y, beacons.beacons, 1)
+    #     self.W = self.W1 + self.W2 + np.ones(self.W1.shape)*offset
 
-        self.W1 = gaussian(self.X, self.Y, beacons.beacons,0)
-        self.W2 = gaussian(self.X, self.Y, beacons.beacons, 1)
-        self.W = self.W1 + self.W2 + np.ones(self.W1.shape)*offset
-        # self.W = self.W1 + self.W2 + np.ones(self.W1.shape)
+    @staticmethod
+    def normalize(item):
+        return item / np.linalg.norm(item)
 
-    # def find_closest_grid_point(self,point):
-    #     return self.grid_points[self.tree.query(point)[1]]
+    @staticmethod
+    def perpendicular(a):
+        b = np.empty_like(a)
+        #     b[0] = -a[1]
+        #     b[1] = a[0]
+        b[0] = a[1]
+        b[1] = -a[0]
+        return b
+
+    @staticmethod
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    def check_in_domain(self, point):
+        if (point[0] > 0 and point[0] < self.domain[0] and \
+                point[1] > 0 and point[1] < self.domain[1]):
+            return True
+        else:
+            return False
+
+    def line_intersection(self, ant_locations):
+        for count, ref_line in enumerate(self.ref_lines):
+            xdiff = np.array([ref_line[0][0] - ref_line[1][0], ant_locations[0][0] - ant_locations[1][0]])
+            ydiff = np.array([ref_line[0][1] - ref_line[1][1], ant_locations[0][1] - ant_locations[1][1]])
+
+            div = self.det(xdiff, ydiff)
+            if div != 0:
+                d = (self.det(*ref_line), self.det(*ant_locations))
+                inter = np.array([self.det(d, xdiff) / div, self.det(d, ydiff) / div])
+                if np.linalg.norm(inter - ant_locations[0]) < np.linalg.norm(ant_locations[0] - ant_locations[1]):
+                    return count, inter
+        return None, None
+
+    def obstacle_avoidance(self, start_point, move):
+        if not self.check_in_domain(start_point + move):
+            index_line, inter = self.line_intersection(np.array([start_point, start_point + move]))
+            if isinstance(index_line, int):
+                ref_line = self.ref_lines[index_line]
+                ref_vec = np.array([ref_line[1][0] - ref_line[0][0], ref_line[1][1] - ref_line[0][1]])
+                return inter + self.normalize(self.perpendicular(ref_vec)) * (
+                            np.linalg.norm(move) - np.linalg.norm(start_point - inter))
+            else:
+                return start_point + move
+        else:
+            return start_point + move
+
 
 def mapper(fnc):
     def inner(x, y, beacons,w_type):
