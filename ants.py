@@ -53,9 +53,9 @@ class Ant:
         # self.find_neigh_beacons(beacons)
 
         weights = {beac_tag:beacons.beacons[beac_tag].w[w_type] for beac_tag in self.neigh}
-        weights_wander = {beac_tag: beacons.beacons[beac_tag].w[w_type_wander] for beac_tag in self.neigh}
+        # weights_wander = {beac_tag: beacons.beacons[beac_tag].w[w_type_wander] for beac_tag in self.neigh}
         max_beac_tag = max(weights, key=weights.get, default = 'nothing_in_range')
-        max_beac_tag_wander = max(weights_wander, key=weights_wander.get, default='nothing_in_range')
+        # max_beac_tag_wander = max(weights_wander, key=weights_wander.get, default='nothing_in_range')
         derv = np.zeros(2)
         if max_beac_tag != 'nothing_in_range':
             if beacons.beacons[max_beac_tag].w[w_type] > 0.:
@@ -72,8 +72,17 @@ class Ant:
                 #     derv = self.normalize(np.array([random.uniform(-1, 1), random.uniform(-1, 1)]))
                 # else:
                 #     derv = self.normalize(repel_vec + np.array([random.uniform(-1, 1), random.uniform(-1, 1)]))
-                location_max_beacon_wander = beacons.beacons[max_beac_tag_wander].pt[1]
-                derv = location_max_beacon_wander - self.nt[1]
+
+                # repel_vec = self.normalize(sum(np.array([self.normalize(self.nt[1]-ants[ant_tag].nt[1])
+                #                              for ant_tag in self.neigh_ants])))
+                repel_vec = sum(np.array([self.normalize(self.nt[1] - beacons.beacons[beac_tag].pt[1])
+                                                         for beac_tag in self.neigh]))
+
+                if np.isnan(sum(repel_vec)):
+                    derv = self.normalize(np.array([random.uniform(-1, 1), random.uniform(-1, 1)]))
+                else:
+                    derv = self.normalize(repel_vec + np.array([random.uniform(-1, 1), random.uniform(-1, 1)]))
+
 
         # derv = np.array([x_drv_elips_gaussian(self.nt[1][0], self.nt[1][1]),
         #                  y_drv_elips_gaussian(self.nt[1][0], self.nt[1][1])]) + guided_move
